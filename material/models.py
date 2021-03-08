@@ -8,16 +8,22 @@ class Superclass(models.Model):
     name = models.CharField(verbose_name="名字", max_length=32)
     description = models.CharField(verbose_name="描述", max_length=72, null=True)
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         db_table = 'superclass'
         ordering = ['id']
 
 
 class Subclass(models.Model):
-    superclass = models.ForeignKey(Superclass, on_delete=models.SET_NULL, verbose_name="父类", null=True)
+    superclass = models.ForeignKey(Superclass, on_delete=models.CASCADE, verbose_name="父类", null=True)
     code = models.CharField(verbose_name="编号", max_length=2)
     name = models.CharField(verbose_name="名字", max_length=32)
     example = models.CharField(verbose_name="举例", max_length=72, null=True)
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         db_table = 'subclass'

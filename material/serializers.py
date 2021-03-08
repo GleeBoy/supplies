@@ -10,7 +10,7 @@ class SuperclassSerializer(serializers.ModelSerializer):
 
 
 class SubclassSerializer(serializers.ModelSerializer):
-    superclass = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    superclass = serializers.SlugRelatedField(queryset=Superclass.objects.all(), slug_field='name')
 
     class Meta:
         model = Subclass

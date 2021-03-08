@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse, FileResponse
 from django.contrib import auth
 import json, os
-
+from rest_framework.pagination import PageNumberPagination
 # Create your views here.
 
 
@@ -82,9 +82,16 @@ class MaterialInfoViewSet(viewsets.ModelViewSet):
     #     return
 
 
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
+
 class SuperclassViewSet(viewsets.ModelViewSet):
     queryset = Superclass.objects.all()
     serializer_class = SuperclassSerializer
+    pagination_class = LargeResultsSetPagination
 
 
 class SubclassViewSet(viewsets.ModelViewSet):
@@ -92,6 +99,7 @@ class SubclassViewSet(viewsets.ModelViewSet):
     serializer_class = SubclassSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['superclass__code']
+    pagination_class = LargeResultsSetPagination
 
 
 def middle_str(request):
@@ -117,3 +125,30 @@ def check_firm(request):
 def test(request):
     print(request)
     return JsonResponse({})
+
+
+def get_sub(request):
+    sub_code = Subclass.objects.filter(superclass__name=request.GET.get('superName')).order_by('-id').first().code
+    next_sub_code = str(int(sub_code) + 1).zfill(2)
+    return JsonResponse({'sub_code': next_sub_code})
+
+
+def check_super_code(request):
+    if Superclass.objects.filter(code=request.GET.get('code')).exists():
+        return JsonResponse({'results': 'yes'})
+    else:
+        return JsonResponse({'results': 'no'})
+
+
+def check_super_name(request):
+    if Superclass.objects.filter(name=request.GET.get('name')).exists():
+        return JsonResponse({'results': 'yes'})
+    else:
+        return JsonResponse({'results': 'no'})
+
+
+def check_sub_name(request):
+    if Subclass.objects.filter(superclass__name=request.GET.get('super_name'), name=request.GET.get('name')).exists():
+        return JsonResponse({'results': 'yes'})
+    else:
+        return JsonResponse({'results': 'no'})
