@@ -19,6 +19,7 @@ class SubclassSerializer(serializers.ModelSerializer):
 
 class MaterialSerializer(serializers.ModelSerializer):
     record_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", required=False)
+    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
 
     class Meta:
         model = MaterialInfo

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -30,6 +31,11 @@ class Subclass(models.Model):
         ordering = ['superclass', 'code']
 
 
+# def request_user(instance):
+#     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+#     return instance.user
+
+
 class MaterialInfo(models.Model):
     item_code = models.CharField(verbose_name="中安料号", unique=True, max_length=20)
     item_name = models.CharField(verbose_name="类别", max_length=32)
@@ -40,6 +46,7 @@ class MaterialInfo(models.Model):
     specification = models.FileField(verbose_name="规格书", upload_to='specification', blank=True, null=True)
     remark = models.CharField(verbose_name="备注", max_length=256, null=True)
     record_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间', blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="操作员")
 
     class Meta:
         db_table = 'materialinfo'

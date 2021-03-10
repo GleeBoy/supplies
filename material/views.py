@@ -35,7 +35,7 @@ def login(request):
                 auth.login(request=request, user=user)
                 response = JsonResponse({'status': True})
                 response.set_cookie('username', user.username)
-                response.set_cookie('superUser', user.is_superuser)
+                response.set_cookie('id', user.id)
             else:
                 response = JsonResponse({'status': False})
         except Exception as e:
@@ -57,7 +57,7 @@ def logout(request):
     # response.delete_cookie('userId')
     response = JsonResponse({'status': False})
     response.delete_cookie('username')
-    response.delete_cookie('superUser')
+    response.delete_cookie('id')
     return response
 
 
@@ -77,9 +77,6 @@ class MaterialInfoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['item_code', 'item_name', 'describe', 'firm_code', 'firm_name', 'remark']
     # permission_classes = [MopLevel1MenuPermission]
-
-    # def list(self):
-    #     return
 
 
 class LargeResultsSetPagination(PageNumberPagination):

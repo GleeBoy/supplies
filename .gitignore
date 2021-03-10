@@ -4,4 +4,5 @@ material/migrations/__pycache__
 media/img
 media/specification
 supplies/__pycache__
+__pycache__/
 

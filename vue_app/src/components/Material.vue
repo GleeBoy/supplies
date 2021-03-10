@@ -9,27 +9,30 @@
       </el-form-item>
       <el-button type="primary" round @click="openDialog">添加</el-button>
     </el-form>
-    <el-dialog title="添加物料" :visible.sync="dialogFormVisible">
+    <el-dialog title="" :visible.sync="dialogFormVisible">
       <el-form :model="materForm" :rules="rules" ref="materForm" status-icon  class="addForm">
-        <el-form-item label="中安料号" prop="lastStr">
-          <el-select v-model="materForm.superClass" style="width: 150px" placeholder="请选择父类" @change="searchSub">
-            <el-option
-              v-for="item in superClass"
-              :key="item.code"
-              :label="item.name"
-              :value="item.code">
-            </el-option>
-          </el-select>
-          <el-select v-model="materForm.subClass" style="width: 150px" placeholder="请选择子类" @change="getMiddleStr">
-            <el-option
-              v-for="item in subClass"
-              :key="item.code"
-              :label="item.name"
-              :value="item.code">
-            </el-option>
-          </el-select>
-          <el-input v-model="materForm.middleStr" readonly autocomplete="off"></el-input>
-          <el-input v-model="materForm.lastStr" @change="getItemCode" autocomplete="off"></el-input>
+        <el-form-item label="中安料号" prop="item_code">
+          <div v-if="!materForm.id">
+            <el-select v-model="materForm.superClass" style="width: 150px" placeholder="请选择父类" @change="searchSub">
+              <el-option
+                v-for="item in superClass"
+                :key="item.code"
+                :label="item.name"
+                :value="item.code">
+              </el-option>
+            </el-select>
+            <el-select v-model="materForm.subClass" style="width: 150px" placeholder="请选择子类" @change="getMiddleStr">
+              <el-option
+                v-for="item in subClass"
+                :key="item.code"
+                :label="item.name"
+                :value="item.code">
+              </el-option>
+            </el-select>
+            <el-input v-model="materForm.middleStr" readonly autocomplete="off"></el-input>
+            <el-input v-model="materForm.lastStr" @change="getItemCode" autocomplete="off"></el-input>
+          </div>
+
           <el-input v-model="materForm.item_code" style="width: 500px" readonly autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="类别" prop="item_name">
@@ -94,6 +97,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      @row-click="marInfo"
     >
 <!--      :default-sort="{prop: 'item_code', order: 'descending'}"-->
       <el-table-column
@@ -108,10 +112,10 @@
         sortable
         width="180">
       </el-table-column>
-      <el-table-column
-        prop="describe"
-        label="描述">
-      </el-table-column>
+<!--      <el-table-column-->
+<!--        prop="describe"-->
+<!--        label="描述">-->
+<!--      </el-table-column>-->
       <el-table-column
         prop="firm_code"
         label="厂商型号"
@@ -126,10 +130,11 @@
       <el-table-column
         label="物料照片">
         <template slot-scope="scope">
-          <el-image
+          <el-image v-if="scope.row.material_img"
             style="width: 50px; height: 50px"
             :src="scope.row.material_img"
             ></el-image>
+          <label v-else></label>
         </template>
       </el-table-column>
       <el-table-column
@@ -138,11 +143,11 @@
           <a :href="scope.row.specification">{{ scope.row.specification | fileName }}</a>
         </template>
       </el-table-column>
-      <el-table-column
-        prop="remark"
-        label="备注"
-        width="180">
-      </el-table-column>
+<!--      <el-table-column-->
+<!--        prop="remark"-->
+<!--        label="备注"-->
+<!--        width="180">-->
+<!--      </el-table-column>-->
       <el-table-column
         prop="record_time"
         label="创建时间">
@@ -157,10 +162,44 @@
       layout="total, sizes, prev, pager, next, jumper"
       :total="pagination.count">
     </el-pagination>
+    <el-dialog title="物料信息" :visible.sync="marVisible">
+      <el-form :model="materForm" status-icon  class="addForm">
+        <el-form-item label="中安料号">
+          <el-input v-model="materForm.item_code" style="width: 500px" readonly autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="类别">
+          <el-input v-model="materForm.item_name" readonly autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="materForm.describe" readonly style="width: 500px" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="厂商型号">
+          <el-input v-model="materForm.firm_code" readonly autocomplete="off"></el-input>
+          <label>厂商</label> <el-input v-model="materForm.firm_name" readonly autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="物料照片">
+          <div v-if="materForm.material_img instanceof Object"></div>
+          <el-image v-else style="width: 50px; height: 50px" :src="materForm.material_img"></el-image>
+        </el-form-item>
+        <el-form-item label="规格书">
+          <a :href="materForm.specification">{{ materForm.specification | fileName }}</a>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="materForm.remark" readonly style="width: 500px" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="操作员">
+          <el-input v-model="materForm.user" readonly style="width: 500px" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-button type="primary" icon="el-icon-edit" circle @click="editMaterial"></el-button>
+        <el-button type="danger" icon="el-icon-delete" circle @click="deleteMaterial"></el-button>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import Cookies from 'js-cookie'
+
 export default {
   name: 'Material',
   data () {
@@ -175,19 +214,23 @@ export default {
       if (this.materForm.firm_code === '' || this.materForm.firm_name === '') {
         callback(new Error('不可为空'))
       } else {
-        let params = {
-          params: {
-            firm_code: this.materForm.firm_code,
-            firm_name: this.materForm.firm_name
+        if (this.materForm.id) {
+          callback()
+        } else {
+          let params = {
+            params: {
+              firm_code: this.materForm.firm_code,
+              firm_name: this.materForm.firm_name
+            }
           }
+          this.$djangoAPI.get('/check_firm/', params).then(res => {
+            if (res.results === 'yes') {
+              callback(new Error('厂商型号，厂商已存在'))
+            } else {
+              callback()
+            }
+          })
         }
-        this.$djangoAPI.get('/check_firm/', params).then(res => {
-          if (res.results === 'yes') {
-            callback(new Error('厂商型号，厂商已存在'))
-          } else {
-            callback()
-          }
-        })
       }
     }
     return {
@@ -206,6 +249,7 @@ export default {
       superClass: [],
       subClass: [],
       materForm: {
+        id: '',
         superClass: '',
         subClass: '',
         middleStr: '',
@@ -223,7 +267,7 @@ export default {
       dialogVisible: false,
       disabled: false,
       rules: {
-        lastStr: [
+        item_code: [
           {validator: validatePass, trigger: 'blur'}
         ],
         item_name: [
@@ -234,7 +278,8 @@ export default {
         ]
       },
       imgList: [],
-      fileList: []
+      fileList: [],
+      marVisible: false
     }
   },
   methods: {
@@ -270,13 +315,16 @@ export default {
       let params = {params: {superClass: this.materForm.superClass, subClass: this.materForm.subClass}}
       this.$djangoAPI.get('/middle_str/', params).then(res => {
         this.materForm.middleStr = res.results
-        // this.getItemCode()
+        this.getItemCode()
       })
     },
     getItemCode () {
-      this.materForm.item_code = this.materForm.superClass + this.materForm.subClass + this.materForm.middleStr + this.materForm.lastStr
+      if (this.materForm.lastStr) { // 确保lastStr不为空
+        this.materForm.item_code = this.materForm.superClass + this.materForm.subClass + this.materForm.middleStr + this.materForm.lastStr
+      }
     },
     openDialog (row) {
+      this.initMaterForm()
       this.$djangoAPI.get('/manage/superclass/').then(res => {
         this.superClass = res.results
         this.materForm.superClass = this.superClass[0].code
@@ -302,20 +350,36 @@ export default {
           }
           formData.append('firm_code', this.materForm.firm_code)
           formData.append('firm_name', this.materForm.firm_name)
-          if (this.materForm.material_img) {
+          if (this.materForm.material_img instanceof Object) {
             formData.append('material_img', this.materForm.material_img.raw)
           }
-          if (this.materForm.specification) {
+          if (this.materForm.specification instanceof Object) {
             formData.append('specification', this.materForm.specification.raw)
           }
           if (this.materForm.remark) {
             formData.append('remark', this.materForm.remark)
           }
-          this.$djangoAPI.post('/manage/materialinfo/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
-            this.initMaterForm()
-            this.dialogFormVisible = false
-            this.onSearch()
-          })
+          formData.append('user', Cookies.get('username'))
+          if (this.materForm.id) {
+            let url = '/manage/materialinfo/' + this.materForm.id + '/'
+            this.$djangoAPI.put(url, formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
+              this.dialogFormVisible = false
+              this.$message({
+                type: 'success',
+                message: '修改成功!'
+              })
+              this.onSearch()
+            })
+          } else {
+            this.$djangoAPI.post('/manage/materialinfo/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
+              this.dialogFormVisible = false
+              this.$message({
+                type: 'success',
+                message: '添加成功!'
+              })
+              this.onSearch()
+            })
+          }
         }
       })
     },
@@ -342,11 +406,52 @@ export default {
       }
       this.imgList = []
       this.fileList = []
+    },
+    editMaterial () {
+      this.marVisible = false
+      this.dialogFormVisible = true
+      // if (this.superClass.id) {
+      //       let url = '/manage/superclass/' + this.superClass.id + '/'
+      //       this.$djangoAPI.put(url, formData).then(res => {
+      //         this.$message.success('修改成功')
+      //       })
+      //     }
+    },
+    deleteMaterial () {
+      this.$confirm('此操作将永久删除这条物料信息, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.marVisible = false
+        let url = '/manage/materialinfo/' + this.materForm.id + '/'
+        this.$djangoAPI.delete(url).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.onSearch()
+        })
+      })
+    },
+    marInfo (row) {
+      this.marVisible = true
+      this.materForm.id = row.id
+      this.materForm.item_code = row.item_code
+      this.materForm.item_name = row.item_name
+      this.materForm.describe = row.describe
+      this.materForm.firm_code = row.firm_code
+      this.materForm.firm_name = row.firm_name
+      this.materForm.remark = row.remark
+      this.materForm.material_img = row.material_img
+      this.materForm.specification = row.specification
+      this.materForm.user = row.user
+      this.imgList = []
+      this.fileList = []
     }
   },
   created: function () {
     this.onSearch()
-    this.getItemCode()
   }
 }
 </script>

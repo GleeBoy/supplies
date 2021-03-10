@@ -24,7 +24,11 @@ Vue.config.productionTip = false
 
 Vue.filter('fileName', function (value) {
   if (!value) return ''
-  return decodeURIComponent(value.substring(value.lastIndexOf('/') + 1))
+  if (value instanceof Object) {
+    return ''
+  } else {
+    return decodeURIComponent(value.substring(value.lastIndexOf('/') + 1))
+  }
 })
 
 /* eslint-disable no-new */

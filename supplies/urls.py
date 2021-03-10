@@ -30,6 +30,7 @@ router.register(r'subclass', SubclassViewSet, basename='subclass')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', login),
+    path('logout/', logout),
     path('manage/', include(router.urls)),
     path('middle_str/', middle_str),
     path('check_firm/', check_firm),
