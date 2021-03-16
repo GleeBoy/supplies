@@ -21,6 +21,7 @@ from django.template.response import TemplateResponse
 from django.views.generic import TemplateView
 from django.views.static import serve
 from django.conf import settings
+from django.views.generic.base import RedirectView
 
 router = DefaultRouter()
 router.register(r'materialinfo', MaterialInfoViewSet, basename='materialinfo')
@@ -39,6 +40,7 @@ urlpatterns = [
     path('check_super_code/', check_super_code),
     path('check_super_name/', check_super_name),
     path('check_sub_name/', check_sub_name),
+    # path(r'home/', RedirectView.as_view(url=r'/', permanent=True)),
     re_path(r"^media/img/(?P<path>.*)", serve, {"document_root": settings.UPLOAD_IMG}),
     re_path(r"^media/specification/(?P<path>.*)", serve, {"document_root": settings.UPLOAD_SPE}),
     re_path('^.*$', TemplateView.as_view(template_name='index.html'), name='vue_app'),

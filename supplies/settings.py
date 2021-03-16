@@ -25,7 +25,7 @@ SECRET_KEY = 'h7zxd=7&hi$8#&9*1gsvt%k9dofw#bh99ohbz8q_b&%-kjg31@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -57,8 +57,8 @@ ROOT_URLCONF = 'supplies.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 'DIRS': [''],
-        'DIRS': ['vue_app'],
+        'DIRS': [''],
+        # 'DIRS': ['vue_app'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -133,6 +133,11 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'material/templates/static/'),
+    # os.path.join(BASE_DIR, 'vue_app/dist/static/js'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'collect_static/')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 

@@ -11,6 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 # Create your views here.
 
 
+# @require_http_methods(['GET', 'POST'])
 @ensure_csrf_cookie
 def login(request):
     """
@@ -125,8 +126,12 @@ def test(request):
 
 
 def get_sub(request):
-    sub_code = Subclass.objects.filter(superclass__name=request.GET.get('superName')).order_by('-id').first().code
-    next_sub_code = str(int(sub_code) + 1).zfill(2)
+    sub = Subclass.objects.filter(superclass__name=request.GET.get('superName'))
+    if sub.exists():
+        sub_code = sub.order_by('-id').first().code
+        next_sub_code = str(int(sub_code) + 1).zfill(2)
+    else:
+        next_sub_code = '01'
     return JsonResponse({'sub_code': next_sub_code})
 
 

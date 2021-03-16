@@ -60,7 +60,7 @@
         label="操作">
         <template slot-scope="scope">
         <el-button type="primary" icon="el-icon-edit" circle @click="editSub(scope.row)"></el-button>
-        <el-button type="danger" icon="el-icon-delete" circle></el-button>
+        <el-button type="danger" icon="el-icon-delete" circle @click="deleteSub(scope.row.id)"></el-button>
       </template>
       </el-table-column>
     </el-table>
@@ -247,14 +247,17 @@ export default {
             let url = '/manage/superclass/' + this.superClass.id + '/'
             this.$djangoAPI.put(url, formData).then(res => {
               this.$message.success('修改成功')
+              this.dialogFormVisible = false
+              this.getSuperClass()
+              this.getSubClass()
             })
           } else {
             this.$djangoAPI.post('/manage/superclass/', formData).then(res => {
               this.$message.success('添加成功')
+              this.dialogFormVisible = false
+              this.getSuperClass()
             })
           }
-          this.dialogFormVisible = false
-          this.getSuperClass()
         }
       })
     },
@@ -329,14 +332,16 @@ export default {
             let url = '/manage/subclass/' + this.subClass.id + '/'
             this.$djangoAPI.put(url, formData).then(res => {
               this.$message.success('修改成功')
+              this.subVisible = false
+              this.getSubClass()
             })
           } else {
             this.$djangoAPI.post('/manage/subclass/', formData).then(res => {
               this.$message.success('添加成功')
+              this.subVisible = false
+              this.getSubClass()
             })
           }
-          this.subVisible = false
-          this.getSubClass()
         }
       })
     },
@@ -354,6 +359,27 @@ export default {
       this.subClass.example = row.example
       this.subClass.id = row.id
       this.subClass.copyName = row.name
+    },
+    deleteSub (id) {
+      this.$confirm('此操作将永久删除子类, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        let url = '/manage/subclass/' + id + '/'
+        this.$djangoAPI.delete(url).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.getSubClass()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
     }
   },
   created: function () {

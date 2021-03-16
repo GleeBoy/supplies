@@ -47,7 +47,7 @@ export default {
     logout () {
       this.$djangoAPI.get('logout/').then(
         res => {
-          this.$router.push({path: '/'})
+          this.$router.push({path: '/', name: 'Login'})
         }
       )
     }

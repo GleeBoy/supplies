@@ -16,6 +16,10 @@ export default new Router({
       name: 'HelloWorld',
       component: HelloWorld,
       children: [
+        // {
+        //   path: '',
+        //   component: Material
+        // },
         {
           path: 'material',
           name: 'Material',
