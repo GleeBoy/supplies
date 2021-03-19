@@ -23,23 +23,24 @@ from django.views.static import serve
 from django.conf import settings
 from django.views.generic.base import RedirectView
 
-router = DefaultRouter()
-router.register(r'materialinfo', MaterialInfoViewSet, basename='materialinfo')
-router.register(r'superclass', SuperclassViewSet, basename='superclass')
-router.register(r'subclass', SubclassViewSet, basename='subclass')
+# router = DefaultRouter()
+# router.register(r'materialinfo', MaterialInfoViewSet, basename='materialinfo')
+# router.register(r'superclass', SuperclassViewSet, basename='superclass')
+# router.register(r'subclass', SubclassViewSet, basename='subclass')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', login),
-    path('logout/', logout),
-    path('manage/', include(router.urls)),
-    path('middle_str/', middle_str),
-    path('check_firm/', check_firm),
-    path('test/', test),
-    path('get_sub/', get_sub),
-    path('check_super_code/', check_super_code),
-    path('check_super_name/', check_super_name),
-    path('check_sub_name/', check_sub_name),
+    path('api/', include('material.urls')),
+    # path('login/', login),
+    # path('logout/', logout),
+    # path('manage/', include(router.urls)),
+    # path('middle_str/', middle_str),
+    # path('check_firm/', check_firm),
+    # path('test/', test),
+    # path('get_sub/', get_sub),
+    # path('check_super_code/', check_super_code),
+    # path('check_super_name/', check_super_name),
+    # path('check_sub_name/', check_sub_name),
     # path(r'home/', RedirectView.as_view(url=r'/', permanent=True)),
     re_path(r"^media/img/(?P<path>.*)", serve, {"document_root": settings.UPLOAD_IMG}),
     re_path(r"^media/specification/(?P<path>.*)", serve, {"document_root": settings.UPLOAD_SPE}),

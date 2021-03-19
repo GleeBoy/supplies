@@ -7,7 +7,7 @@
       <el-form-item>
         <el-button type="primary" round @click="onSearch">查询</el-button>
       </el-form-item>
-      <el-button type="primary" round @click="openDialog">添加</el-button>
+      <el-button v-if="permissions" type="primary" round @click="openDialog">添加</el-button>
     </el-form>
     <el-dialog title="" :visible.sync="dialogFormVisible">
       <el-form :model="materForm" :rules="rules" ref="materForm" status-icon  class="addForm">
@@ -112,10 +112,10 @@
         sortable
         width="180">
       </el-table-column>
-<!--      <el-table-column-->
-<!--        prop="describe"-->
-<!--        label="描述">-->
-<!--      </el-table-column>-->
+      <el-table-column
+        prop="describe"
+        label="描述">
+      </el-table-column>
       <el-table-column
         prop="firm_code"
         label="厂商型号"
@@ -143,11 +143,11 @@
           <a :href="scope.row.specification">{{ scope.row.specification | fileName }}</a>
         </template>
       </el-table-column>
-<!--      <el-table-column-->
-<!--        prop="remark"-->
-<!--        label="备注"-->
-<!--        width="180">-->
-<!--      </el-table-column>-->
+      <el-table-column
+        prop="remark"
+        label="备注"
+        width="180">
+      </el-table-column>
       <el-table-column
         prop="record_time"
         label="创建时间">
@@ -179,7 +179,10 @@
         </el-form-item>
         <el-form-item label="物料照片">
           <div v-if="materForm.material_img instanceof Object"></div>
-          <el-image v-else style="width: 50px; height: 50px" :src="materForm.material_img"></el-image>
+          <el-image v-else style="width: 50px; height: 50px"
+                    :src="materForm.material_img"
+                    :preview-src-list="[materForm.material_img]"
+                    :z-index="2100"></el-image>
         </el-form-item>
         <el-form-item label="规格书">
           <a :href="materForm.specification">{{ materForm.specification | fileName }}</a>
@@ -190,8 +193,10 @@
         <el-form-item label="操作员">
           <el-input v-model="materForm.user" readonly style="width: 500px" autocomplete="off"></el-input>
         </el-form-item>
-        <el-button type="primary" icon="el-icon-edit" circle @click="editMaterial"></el-button>
-        <el-button type="danger" icon="el-icon-delete" circle @click="deleteMaterial"></el-button>
+        <el-form-item v-if="permissions" label="操作">
+          <el-button type="primary" icon="el-icon-edit" circle @click="editMaterial"></el-button>
+          <el-button type="danger" icon="el-icon-delete" circle @click="deleteMaterial"></el-button>
+        </el-form-item>
       </el-form>
     </el-dialog>
   </div>
@@ -223,7 +228,7 @@ export default {
               firm_name: this.materForm.firm_name
             }
           }
-          this.$djangoAPI.get('/check_firm/', params).then(res => {
+          this.$djangoAPI.get('/api/check_firm/', params).then(res => {
             if (res.results === 'yes') {
               callback(new Error('厂商型号，厂商已存在'))
             } else {
@@ -253,7 +258,7 @@ export default {
         superClass: '',
         subClass: '',
         middleStr: '',
-        lastStr: '',
+        lastStr: '01',
         item_code: '',
         item_name: '',
         describe: '',
@@ -280,6 +285,7 @@ export default {
       imgList: [],
       fileList: [],
       marVisible: false
+      // permissions: false
     }
   },
   methods: {
@@ -291,7 +297,7 @@ export default {
           page_size: this.pagination.limit
         }
       }
-      this.$djangoAPI.get('/manage/materialinfo/', params).then(res => {
+      this.$djangoAPI.get('/api/manage/materialinfo/', params).then(res => {
         this.pagination.count = res.count
         this.tableData = res.results
       })
@@ -305,7 +311,7 @@ export default {
       this.onSearch()
     },
     searchSub () {
-      this.$djangoAPI.get('/manage/subclass/', {params: {search: this.materForm.superClass}}).then(res => {
+      this.$djangoAPI.get('/api/manage/subclass/', {params: {search: this.materForm.superClass}}).then(res => {
         this.subClass = res.results
         this.materForm.subClass = this.subClass[0].code
         this.getMiddleStr()
@@ -313,24 +319,24 @@ export default {
     },
     getMiddleStr () {
       let params = {params: {superClass: this.materForm.superClass, subClass: this.materForm.subClass}}
-      this.$djangoAPI.get('/middle_str/', params).then(res => {
+      this.$djangoAPI.get('/api/middle_str/', params).then(res => {
         this.materForm.middleStr = res.results
         this.getItemCode()
       })
     },
     getItemCode () {
       if (this.materForm.lastStr) { // 确保lastStr不为空
-        this.materForm.item_code = this.materForm.superClass + this.materForm.subClass + this.materForm.middleStr + this.materForm.lastStr
+        this.materForm.item_code = this.materForm.superClass + this.materForm.subClass + '-' + this.materForm.middleStr + '-' + this.materForm.lastStr
       }
     },
     openDialog (row) {
       this.initMaterForm()
-      this.$djangoAPI.get('/manage/superclass/').then(res => {
+      this.$djangoAPI.get('/api/manage/superclass/').then(res => {
         this.superClass = res.results
         this.materForm.superClass = this.superClass[0].code
         this.searchSub()
       })
-      // this.$djangoAPI.get('/manage/subclass/', {params: {search: this.materForm.superClass}}).then(res => {
+      // this.$djangoAPI.get('/api/manage/subclass/', {params: {search: this.materForm.superClass}}).then(res => {
       //   this.subClass = res.results
       // })
       this.dialogFormVisible = true
@@ -345,9 +351,7 @@ export default {
           let formData = new FormData()
           formData.append('item_code', this.materForm.item_code)
           formData.append('item_name', this.materForm.item_name)
-          if (this.materForm.describe) {
-            formData.append('describe', this.materForm.describe)
-          }
+          formData.append('describe', this.materForm.describe)
           formData.append('firm_code', this.materForm.firm_code)
           formData.append('firm_name', this.materForm.firm_name)
           if (this.materForm.material_img instanceof Object) {
@@ -356,12 +360,10 @@ export default {
           if (this.materForm.specification instanceof Object) {
             formData.append('specification', this.materForm.specification.raw)
           }
-          if (this.materForm.remark) {
-            formData.append('remark', this.materForm.remark)
-          }
+          formData.append('remark', this.materForm.remark)
           formData.append('user', Cookies.get('username'))
           if (this.materForm.id) {
-            let url = '/manage/materialinfo/' + this.materForm.id + '/'
+            let url = '/api/manage/materialinfo/' + this.materForm.id + '/'
             this.$djangoAPI.put(url, formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
               this.dialogFormVisible = false
               this.$message({
@@ -371,7 +373,7 @@ export default {
               this.onSearch()
             })
           } else {
-            this.$djangoAPI.post('/manage/materialinfo/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
+            this.$djangoAPI.post('/api/manage/materialinfo/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
               this.dialogFormVisible = false
               this.$message({
                 type: 'success',
@@ -394,7 +396,7 @@ export default {
         superClass: '',
         subClass: '',
         middleStr: '',
-        lastStr: '',
+        lastStr: '01',
         item_code: '',
         item_name: '',
         describe: '',
@@ -411,7 +413,7 @@ export default {
       this.marVisible = false
       this.dialogFormVisible = true
       // if (this.superClass.id) {
-      //       let url = '/manage/superclass/' + this.superClass.id + '/'
+      //       let url = '/api/manage/superclass/' + this.superClass.id + '/'
       //       this.$djangoAPI.put(url, formData).then(res => {
       //         this.$message.success('修改成功')
       //       })
@@ -424,7 +426,7 @@ export default {
         type: 'warning'
       }).then(() => {
         this.marVisible = false
-        let url = '/manage/materialinfo/' + this.materForm.id + '/'
+        let url = '/api/manage/materialinfo/' + this.materForm.id + '/'
         this.$djangoAPI.delete(url).then(res => {
           this.$message({
             type: 'success',
@@ -452,6 +454,9 @@ export default {
   },
   created: function () {
     this.onSearch()
+  },
+  beforeCreate: function () {
+    this.permissions = Cookies.get('permissions')
   }
 }
 </script>

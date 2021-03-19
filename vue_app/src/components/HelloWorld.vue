@@ -45,7 +45,7 @@ export default {
       this.$router.push({path: key})
     },
     logout () {
-      this.$djangoAPI.get('logout/').then(
+      this.$djangoAPI.get('/api/logout/').then(
         res => {
           this.$router.push({path: '/', name: 'Login'})
         }

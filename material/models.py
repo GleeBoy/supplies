@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import os, logging
 
 # Create your models here.
 
@@ -47,6 +48,19 @@ class MaterialInfo(models.Model):
     remark = models.CharField(verbose_name="备注", max_length=256, null=True)
     record_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间', blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="操作员")
+
+    def delete(self, using=None, keep_parents=False):
+        if self.material_img:
+            try:
+                os.remove(self.material_img.path)
+            except Exception as e:
+                logging.error(e)
+        if self.specification:
+            try:
+                os.remove(self.specification.path)
+            except Exception as e:
+                logging.error(e)
+        super(MaterialInfo, self).delete(using=None, keep_parents=False)
 
     class Meta:
         db_table = 'materialinfo'

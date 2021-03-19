@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>
+    <div v-if="permissions">
       <el-button type="primary" round size="medium" @click="addSuper">添加父类</el-button>
       <el-button type="primary" round size="medium" @click="addSub">添加子类</el-button>
     </div>
@@ -24,10 +24,9 @@
         prop="description"
         label="描述">
       </el-table-column>
-      <el-table-column
-        label="操作">
+      <el-table-column v-if="permissions" label="操作">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" circle @click="editSuper(scope.row)"></el-button>
+          <el-button  type="primary" icon="el-icon-edit" circle @click="editSuper(scope.row)"></el-button>
           <el-button type="danger" icon="el-icon-delete" circle @click="deleteSuper(scope.row.id)"></el-button>
         </template>
       </el-table-column>
@@ -56,8 +55,7 @@
         prop="example"
         label="例子">
       </el-table-column>
-      <el-table-column
-        label="操作">
+      <el-table-column v-if="permissions" label="操作">
         <template slot-scope="scope">
         <el-button type="primary" icon="el-icon-edit" circle @click="editSub(scope.row)"></el-button>
         <el-button type="danger" icon="el-icon-delete" circle @click="deleteSub(scope.row.id)"></el-button>
@@ -112,11 +110,13 @@
 </template>
 
 <script>
+import Cookies from "js-cookie";
+
 export default {
   name: 'Kind',
   data () {
     var supCodeHttp = (callback) => {
-      this.$djangoAPI.get('/check_super_code/', {params: {code: this.superClass.code}}).then(res => {
+      this.$djangoAPI.get('/api/check_super_code/', {params: {code: this.superClass.code}}).then(res => {
         if (res.results === 'yes') {
           callback(new Error('编码已存在'))
         } else {
@@ -136,7 +136,7 @@ export default {
       }
     }
     var supNameHttp = (callback) => {
-      this.$djangoAPI.get('/check_super_name/', {params: {name: this.superClass.name}}).then(res => {
+      this.$djangoAPI.get('/api/check_super_name/', {params: {name: this.superClass.name}}).then(res => {
         if (res.results === 'yes') {
           callback(new Error('名称已存在'))
         } else {
@@ -156,7 +156,7 @@ export default {
       }
     }
     var subNameHttp = (callback) => {
-      this.$djangoAPI.get('/check_sub_name/', {params: {super_name: this.subClass.superclass, name: this.subClass.name}}).then(res => {
+      this.$djangoAPI.get('/api/check_sub_name/', {params: {super_name: this.subClass.superclass, name: this.subClass.name}}).then(res => {
         if (res.results === 'yes') {
           callback(new Error('这个父类下的子类名称已存在'))
         } else {
@@ -224,13 +224,13 @@ export default {
   },
   methods: {
     getSuperClass () {
-      this.$djangoAPI.get('/manage/superclass/').then(res => {
+      this.$djangoAPI.get('/api/manage/superclass/').then(res => {
         this.tableData1 = res.results
       })
     },
     getSubClass () {
       // subclass
-      this.$djangoAPI.get('/manage/subclass/').then(res => {
+      this.$djangoAPI.get('/api/manage/subclass/').then(res => {
         this.tableData2 = res.results
       })
     },
@@ -244,7 +244,7 @@ export default {
             formData.append('description', this.superClass.description)
           }
           if (this.superClass.id) {
-            let url = '/manage/superclass/' + this.superClass.id + '/'
+            let url = '/api/manage/superclass/' + this.superClass.id + '/'
             this.$djangoAPI.put(url, formData).then(res => {
               this.$message.success('修改成功')
               this.dialogFormVisible = false
@@ -252,7 +252,7 @@ export default {
               this.getSubClass()
             })
           } else {
-            this.$djangoAPI.post('/manage/superclass/', formData).then(res => {
+            this.$djangoAPI.post('/api/manage/superclass/', formData).then(res => {
               this.$message.success('添加成功')
               this.dialogFormVisible = false
               this.getSuperClass()
@@ -288,7 +288,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        let url = '/manage/superclass/' + id + '/'
+        let url = '/api/manage/superclass/' + id + '/'
         this.$djangoAPI.delete(url).then(res => {
           this.$message({
             type: 'success',
@@ -325,18 +325,16 @@ export default {
           formData.append('superclass', this.subClass.superclass)
           formData.append('code', this.subClass.code)
           formData.append('name', this.subClass.name)
-          if (this.subClass.example) {
-            formData.append('example', this.subClass.example)
-          }
+          formData.append('example', this.subClass.example)
           if (this.subClass.id) {
-            let url = '/manage/subclass/' + this.subClass.id + '/'
+            let url = '/api/manage/subclass/' + this.subClass.id + '/'
             this.$djangoAPI.put(url, formData).then(res => {
               this.$message.success('修改成功')
               this.subVisible = false
               this.getSubClass()
             })
           } else {
-            this.$djangoAPI.post('/manage/subclass/', formData).then(res => {
+            this.$djangoAPI.post('/api/manage/subclass/', formData).then(res => {
               this.$message.success('添加成功')
               this.subVisible = false
               this.getSubClass()
@@ -346,7 +344,7 @@ export default {
       })
     },
     subCode () {
-      this.$djangoAPI.get('/get_sub/', {params: {superName: this.subClass.superclass}}).then(res => {
+      this.$djangoAPI.get('/api/get_sub/', {params: {superName: this.subClass.superclass}}).then(res => {
         this.subClass.code = res.sub_code
       })
     },
@@ -366,7 +364,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        let url = '/manage/subclass/' + id + '/'
+        let url = '/api/manage/subclass/' + id + '/'
         this.$djangoAPI.delete(url).then(res => {
           this.$message({
             type: 'success',
@@ -385,6 +383,9 @@ export default {
   created: function () {
     this.getSuperClass()
     this.getSubClass()
+  },
+  beforeCreate: function () {
+    this.permissions = Cookies.get('permissions')
   }
 }
 </script>

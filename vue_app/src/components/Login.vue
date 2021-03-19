@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import Cookies from 'js-cookie'
+// import Cookies from 'js-cookie'
 export default {
   name: 'Login',
   data () {
@@ -69,7 +69,7 @@ export default {
           let formData = new FormData()
           formData.append('UN', this.ruleForm.username)
           formData.append('PW', this.ruleForm.pass)
-          this.$djangoAPI.post('/login/', formData).then(res => {
+          this.$djangoAPI.post('/api/login/', formData).then(res => {
             if (res.status) {
               this.$router.push({path: '/home/material'})
             } else {
@@ -83,15 +83,15 @@ export default {
     }
   },
   created: function () {
-    this.$djangoAPI({
-      url: 'login/'
-    }).then(res => {
-      this.$djangoAPI.interceptors.request.use((config) => {
-        config.headers['X-Requested-With'] = 'XMLHttpRequest'
-        config.headers['X-CSRFToken'] = Cookies.get('csrftoken')
-        return config
-      })
-    })
+    // this.$djangoAPI({
+    //   url: '/api/login/'
+    // }).then(res => {
+    //   this.$djangoAPI.interceptors.request.use((config) => {
+    //     config.headers['X-Requested-With'] = 'XMLHttpRequest'
+    //     config.headers['X-CSRFToken'] = Cookies.get('csrftoken')
+    //     return config
+    //   })
+    // })
   }
 }
 </script>

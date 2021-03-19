@@ -11,6 +11,12 @@ from rest_framework.pagination import PageNumberPagination
 # Create your views here.
 
 
+def delete_cookie(response):
+    response.delete_cookie('username')
+    response.delete_cookie('id')
+    response.delete_cookie('permissions')
+
+
 # @require_http_methods(['GET', 'POST'])
 @ensure_csrf_cookie
 def login(request):
@@ -23,8 +29,7 @@ def login(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
             response = JsonResponse({'status': True})
-            # response.delete_cookie('username')
-            # response.delete_cookie('userId')
+            delete_cookie(response)
         else:
             response = JsonResponse({'status': False})
     else:
@@ -37,6 +42,9 @@ def login(request):
                 response = JsonResponse({'status': True})
                 response.set_cookie('username', user.username)
                 response.set_cookie('id', user.id)
+                groups = user.groups.all()
+                if '管理员' in [group.name for group in groups]:
+                    response.set_cookie('permissions', True)
             else:
                 response = JsonResponse({'status': False})
         except Exception as e:
@@ -54,11 +62,8 @@ def logout(request):
     :return:
     """
     auth.logout(request)
-    # response.delete_cookie('username')
-    # response.delete_cookie('userId')
     response = JsonResponse({'status': False})
-    response.delete_cookie('username')
-    response.delete_cookie('id')
+    delete_cookie(response)
     return response
 
 
@@ -104,7 +109,12 @@ def middle_str(request):
     superClass = request.GET.get('superClass')
     subClass = request.GET.get('subClass')
     code = superClass + subClass
-    num = MaterialInfo.objects.filter(item_code__startswith=code).count() + 1
+    mat = MaterialInfo.objects.filter(item_code__startswith=code)
+    if mat.exists():
+        item_code = mat.order_by('-item_code').first().item_code
+        num = int(item_code[5:-3]) + 1
+    else:
+        num = 1
     num_str = str(num).zfill(5)
     return JsonResponse({'results': num_str})
 
@@ -128,7 +138,7 @@ def test(request):
 def get_sub(request):
     sub = Subclass.objects.filter(superclass__name=request.GET.get('superName'))
     if sub.exists():
-        sub_code = sub.order_by('-id').first().code
+        sub_code = sub.order_by('-code').first().code
         next_sub_code = str(int(sub_code) + 1).zfill(2)
     else:
         next_sub_code = '01'

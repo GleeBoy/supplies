@@ -6,6 +6,7 @@ import router from './router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
+import Cookies from 'js-cookie'
 
 const djangoAPI = axios.create({
   timeout: 10000
@@ -18,7 +19,15 @@ djangoAPI.interceptors.response.use(
     return Promise.reject((err))
   }
 )
+djangoAPI.get('/api/login/').then(res => {
+  djangoAPI.interceptors.request.use((config) => {
+    config.headers['X-Requested-With'] = 'XMLHttpRequest'
+    config.headers['X-CSRFToken'] = Cookies.get('csrftoken')
+    return config
+  })
+})
 Vue.prototype.$djangoAPI = djangoAPI
+
 Vue.use(ElementUI)
 Vue.config.productionTip = false
 
