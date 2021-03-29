@@ -242,6 +242,8 @@ export default {
           formData.append('name', this.superClass.name)
           if (this.superClass.description) {
             formData.append('description', this.superClass.description)
+          } else {
+            formData.append('description', '')
           }
           if (this.superClass.id) {
             let url = '/api/manage/superclass/' + this.superClass.id + '/'
@@ -325,7 +327,11 @@ export default {
           formData.append('superclass', this.subClass.superclass)
           formData.append('code', this.subClass.code)
           formData.append('name', this.subClass.name)
-          formData.append('example', this.subClass.example)
+          if (this.subClass.example) {
+            formData.append('example', this.subClass.example)
+          } else {
+            formData.append('example', '')
+          }
           if (this.subClass.id) {
             let url = '/api/manage/subclass/' + this.subClass.id + '/'
             this.$djangoAPI.put(url, formData).then(res => {

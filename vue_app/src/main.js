@@ -16,6 +16,9 @@ djangoAPI.interceptors.response.use(
     return resp.data
   },
   err => {
+    if (err.response.status === 403) {
+      window.location.replace('/')
+    }
     return Promise.reject((err))
   }
 )

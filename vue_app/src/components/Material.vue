@@ -21,12 +21,12 @@
                 :value="item.code">
               </el-option>
             </el-select>
-            <el-select v-model="materForm.subClass" style="width: 150px" placeholder="请选择子类" @change="getMiddleStr">
+            <el-select style="width: 150px" v-model="materForm.item_name" placeholder="请选择子类" @change="getMiddleStr">
               <el-option
                 v-for="item in subClass"
-                :key="item.code"
+                :key="item.id"
                 :label="item.name"
-                :value="item.code">
+                :value="item">
               </el-option>
             </el-select>
             <el-input v-model="materForm.middleStr" readonly autocomplete="off"></el-input>
@@ -36,14 +36,14 @@
           <el-input v-model="materForm.item_code" style="width: 500px" readonly autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="类别" prop="item_name">
-          <el-input v-model="materForm.item_name" autocomplete="off"></el-input>
+          <el-input v-model="materForm.item_name" style="width: 150px" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="materForm.describe" style="width: 500px" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="厂商型号" prop="firm_code">
-          <el-input v-model="materForm.firm_code" autocomplete="off"></el-input>
-          <label>厂商</label> <el-input v-model="materForm.firm_name" autocomplete="off"></el-input>
+          <el-input v-model="materForm.firm_code" style="width: 150px" autocomplete="off"></el-input>
+          <label>厂商</label> <el-input v-model="materForm.firm_name" style="width: 150px" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="物料照片">
           <el-upload
@@ -222,19 +222,23 @@ export default {
         if (this.materForm.id) {
           callback()
         } else {
-          let params = {
-            params: {
-              firm_code: this.materForm.firm_code,
-              firm_name: this.materForm.firm_name
+          if (this.materForm.firm_name === '中安百傲') {
+            callback()
+          } else {
+            let params = {
+              params: {
+                firm_code: this.materForm.firm_code,
+                firm_name: this.materForm.firm_name
+              }
             }
+            this.$djangoAPI.get('/api/check_firm/', params).then(res => {
+              if (res.results === 'yes') {
+                callback(new Error('厂商型号，厂商已存在'))
+              } else {
+                callback()
+              }
+            })
           }
-          this.$djangoAPI.get('/api/check_firm/', params).then(res => {
-            if (res.results === 'yes') {
-              callback(new Error('厂商型号，厂商已存在'))
-            } else {
-              callback()
-            }
-          })
         }
       }
     }
@@ -314,10 +318,13 @@ export default {
       this.$djangoAPI.get('/api/manage/subclass/', {params: {search: this.materForm.superClass}}).then(res => {
         this.subClass = res.results
         this.materForm.subClass = this.subClass[0].code
-        this.getMiddleStr()
+        this.materForm.item_name = this.subClass[0].name
+        this.getMiddleStr(this.subClass[0])
       })
     },
-    getMiddleStr () {
+    getMiddleStr (val) {
+      this.materForm.subClass = val.code
+      this.materForm.item_name = val.name
       let params = {params: {superClass: this.materForm.superClass, subClass: this.materForm.subClass}}
       this.$djangoAPI.get('/api/middle_str/', params).then(res => {
         this.materForm.middleStr = res.results
@@ -351,7 +358,11 @@ export default {
           let formData = new FormData()
           formData.append('item_code', this.materForm.item_code)
           formData.append('item_name', this.materForm.item_name)
-          formData.append('describe', this.materForm.describe)
+          if (this.materForm.describe) {
+            formData.append('describe', this.materForm.describe)
+          } else {
+            formData.append('describe', '')
+          }
           formData.append('firm_code', this.materForm.firm_code)
           formData.append('firm_name', this.materForm.firm_name)
           if (this.materForm.material_img instanceof Object) {
@@ -360,7 +371,11 @@ export default {
           if (this.materForm.specification instanceof Object) {
             formData.append('specification', this.materForm.specification.raw)
           }
-          formData.append('remark', this.materForm.remark)
+          if (this.materForm.remark) {
+            formData.append('remark', this.materForm.remark)
+          } else {
+            formData.append('remark', '')
+          }
           formData.append('user', Cookies.get('username'))
           if (this.materForm.id) {
             let url = '/api/manage/materialinfo/' + this.materForm.id + '/'

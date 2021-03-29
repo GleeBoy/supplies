@@ -3,6 +3,10 @@ from material.models import *
 
 
 class SuperclassSerializer(serializers.ModelSerializer):
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     if not data['description']:
+    #         data['description'] = ""
 
     class Meta:
         model = Superclass
@@ -12,6 +16,12 @@ class SuperclassSerializer(serializers.ModelSerializer):
 class SubclassSerializer(serializers.ModelSerializer):
     superclass = serializers.SlugRelatedField(queryset=Superclass.objects.all(), slug_field='name')
 
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     if not data['example']:
+    #         data['example'] = ""
+    #     return data
+
     class Meta:
         model = Subclass
         fields = '__all__'
@@ -20,6 +30,14 @@ class SubclassSerializer(serializers.ModelSerializer):
 class MaterialSerializer(serializers.ModelSerializer):
     record_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", required=False)
     user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     if not data['describe']:
+    #         data['describe'] = ""
+    #     if not data['remark']:
+    #         data['remark'] = ""
+    #     return data
 
     class Meta:
         model = MaterialInfo
