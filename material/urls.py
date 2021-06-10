@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register(r'materialinfo', MaterialInfoViewSet, basename='materialinfo')
 router.register(r'superclass', SuperclassViewSet, basename='superclass')
 router.register(r'subclass', SubclassViewSet, basename='subclass')
+router.register(r'mediaimg', MediaImgViewSet, basename='mediaimg')
 urlpatterns = [
     path('login/', login),
     path('logout/', logout),

@@ -27,9 +27,17 @@ class SubclassSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MediaImgSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MediaImg
+        fields = '__all__'
+
+
 class MaterialSerializer(serializers.ModelSerializer):
     record_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", required=False)
-    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+    user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username', required=False)
+    media_img = MediaImgSerializer(many=True, read_only=True)
 
     # def to_representation(self, instance):
     #     data = super().to_representation(instance)
@@ -41,4 +49,8 @@ class MaterialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MaterialInfo
+        # fields = ['id', 'item_code', 'item_name', 'describe', 'firm_code', 'firm_name', 'material_img', 'specification',
+        #           'remark', 'record_time', 'user', 'media_img']
         fields = '__all__'
+
+

@@ -7,7 +7,8 @@
       <el-form-item>
         <el-button type="primary" round @click="onSearch">查询</el-button>
       </el-form-item>
-      <el-button v-if="permissions" type="primary" round @click="openDialog">添加</el-button>
+<!--      v-if="permissions" -->
+      <el-button type="primary" round @click="openDialog">添加</el-button>
     </el-form>
     <el-dialog title="" :visible.sync="dialogFormVisible">
       <el-form :model="materForm" :rules="rules" ref="materForm" status-icon  class="addForm">
@@ -70,6 +71,40 @@
               </span>
             </div>
           </el-upload>
+
+          <el-upload
+            action="#"
+            list-type="picture-card"
+            :http-request="uploadImg"
+            :file-list="materForm.media_img">
+<!--                        :auto-upload="false"-->
+            <i slot="default" class="el-icon-plus"></i>
+            <div slot="file" slot-scope="{file}">
+              <img
+                class="el-upload-list__item-thumbnail"
+                :src="file.file_path" alt="">
+              <span class="el-upload-list__item-actions">
+<!--                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">-->
+<!--                  <i class="el-icon-zoom-in"></i>-->
+<!--                </span>-->
+<!--                <span-->
+<!--                  v-if="!disabled"-->
+<!--                  class="el-upload-list__item-delete"-->
+<!--                  @click="handleDownload(file)"-->
+<!--                >-->
+<!--                  <i class="el-icon-download"></i>-->
+<!--                </span>-->
+                <span
+                  v-if="!disabled"
+                  class="el-upload-list__item-delete"
+                  @click="removeImg(file)"
+                >
+                  <i class="el-icon-delete"></i>
+                </span>
+              </span>
+            </div>
+          </el-upload>
+
         </el-form-item>
         <el-form-item label="规格书">
           <el-upload
@@ -78,6 +113,7 @@
             action="#"
             :limit="1"
             :on-change="specification"
+            :on-remove="rmSpec"
             :file-list="fileList"
             :auto-upload="false">
             <i class="el-icon-upload"></i>
@@ -140,7 +176,8 @@
       <el-table-column
         label="规格书">
         <template slot-scope="scope">
-          <a :href="scope.row.specification">{{ scope.row.specification | fileName }}</a>
+<!--          <a :href="scope.row.specification">{{ scope.row.specification | fileName }}</a>-->
+          {{ scope.row.specification | fileName }}
         </template>
       </el-table-column>
       <el-table-column
@@ -183,6 +220,12 @@
                     :src="materForm.material_img"
                     :preview-src-list="[materForm.material_img]"
                     :z-index="2100"></el-image>
+          <el-image style="width: 50px; height: 50px; margin-left: 5px"
+                    v-for="img in materForm.media_img"
+                    :key="img.id"
+                    :src="img.file_path"
+                    :preview-src-list="[img.file_path]"
+                    :z-index="2100"></el-image>
         </el-form-item>
         <el-form-item label="规格书">
           <a :href="materForm.specification">{{ materForm.specification | fileName }}</a>
@@ -193,7 +236,8 @@
         <el-form-item label="操作员">
           <el-input v-model="materForm.user" readonly style="width: 500px" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item v-if="permissions" label="操作">
+<!--         v-if="permissions"-->
+        <el-form-item label="操作">
           <el-button type="primary" icon="el-icon-edit" circle @click="editMaterial"></el-button>
           <el-button type="danger" icon="el-icon-delete" circle @click="deleteMaterial"></el-button>
         </el-form-item>
@@ -270,7 +314,8 @@ export default {
         firm_name: '',
         remark: '',
         material_img: null,
-        specification: null
+        specification: null,
+        media_img: []
       },
       dialogImageUrl: '',
       dialogVisible: false,
@@ -367,16 +412,20 @@ export default {
           formData.append('firm_name', this.materForm.firm_name)
           if (this.materForm.material_img instanceof Object) {
             formData.append('material_img', this.materForm.material_img.raw)
+          } else if (!this.materForm.material_img) {
+            formData.append('material_img', '')
           }
           if (this.materForm.specification instanceof Object) {
             formData.append('specification', this.materForm.specification.raw)
+          } else if (!this.materForm.specification) {
+            formData.append('specification', '')
           }
           if (this.materForm.remark) {
             formData.append('remark', this.materForm.remark)
           } else {
             formData.append('remark', '')
           }
-          formData.append('user', Cookies.get('username'))
+          // formData.append('user', Cookies.get('username'))
           if (this.materForm.id) {
             let url = '/api/manage/materialinfo/' + this.materForm.id + '/'
             this.$djangoAPI.put(url, formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
@@ -388,6 +437,11 @@ export default {
               this.onSearch()
             })
           } else {
+            var idStr = ''
+            for (var i in this.materForm.media_img) {
+              idStr += this.materForm.media_img[i]['id'] + ','
+            }
+            formData.append('media_img', idStr)
             this.$djangoAPI.post('/api/manage/materialinfo/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
               this.dialogFormVisible = false
               this.$message({
@@ -406,6 +460,9 @@ export default {
     specification (file, imgList) {
       this.materForm.specification = file
     },
+    rmSpec (file, fileList) {
+      this.materForm.specification = null
+    },
     initMaterForm () {
       this.materForm = {
         superClass: '',
@@ -419,7 +476,8 @@ export default {
         firm_name: '',
         remark: '',
         material_img: null,
-        specification: null
+        specification: null,
+        media_img: []
       }
       this.imgList = []
       this.fileList = []
@@ -463,8 +521,52 @@ export default {
       this.materForm.material_img = row.material_img
       this.materForm.specification = row.specification
       this.materForm.user = row.user
-      this.imgList = []
-      this.fileList = []
+      this.materForm.media_img = row.media_img
+      if (row.material_img) {
+        this.imgList = [{url: row.material_img}]
+      } else {
+        this.imgList = []
+      }
+      if (row.specification) {
+        this.fileList = [{url: row.specification, name: this.$options.filters['fileName'](row.specification)}]
+      } else {
+        this.fileList = []
+      }
+    },
+    // handlePictureCardPreview (file) {
+    //   this.dialogImageUrl = file.url
+    //   this.dialogVisible = true
+    // },
+    handleDownload (file) {
+      console.log(file)
+    },
+    uploadImg: function (f) {
+      let formData = new FormData()
+      formData.append('file_path', f.file)
+      formData.append('file_name', f.file.name)
+      if (this.materForm.id) {
+        formData.append('materialinfo', this.materForm.id)
+      }
+      this.$djangoAPI.post('/api/manage/mediaimg/', formData, {headers: {'Content-Type': 'multipart/form-data'}}).then(res => {
+        this.materForm.media_img.push(res)
+      })
+    },
+    removeImg (file) {
+      this.$confirm('此操作将永久删除这张图片, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        let url = '/api/manage/mediaimg/' + file.id + '/'
+        this.$djangoAPI.delete(url).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          let index = this.getIndex(this.materForm.media_img, file)
+          this.materForm.media_img.splice(index, 1)
+        })
+      })
     }
   },
   created: function () {

@@ -8,6 +8,8 @@ from django.http import JsonResponse, FileResponse
 from django.contrib import auth
 import json, os
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework import status
 # Create your views here.
 
 
@@ -83,6 +85,22 @@ class MaterialInfoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['item_code', 'item_name', 'describe', 'firm_code', 'firm_name', 'remark']
     # permission_classes = [MopLevel1MenuPermission]
+
+    def create(self, request, *args, **kwargs):
+        # request.data['user'] = request.user.username
+        data = request.data.copy()
+        data['user'] = request.user.username
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        media_img = request.POST.get('media_img', None)
+        if media_img:
+            for i in media_img.rstrip(',').split(','):
+                img = MediaImg.objects.get(id=int(i))
+                img.materialinfo_id = serializer.data['id']
+                img.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class LargeResultsSetPagination(PageNumberPagination):
@@ -164,3 +182,9 @@ def check_sub_name(request):
         return JsonResponse({'results': 'yes'})
     else:
         return JsonResponse({'results': 'no'})
+
+
+class MediaImgViewSet(viewsets.ModelViewSet):
+    queryset = MediaImg.objects.all()
+    serializer_class = MediaImgSerializer
+

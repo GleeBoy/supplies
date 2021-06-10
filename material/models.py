@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 import os, logging
+from django.dispatch import receiver
+from django.db.models.signals import post_delete
 
 # Create your models here.
 
@@ -47,7 +49,7 @@ class MaterialInfo(models.Model):
     specification = models.FileField(verbose_name="规格书", upload_to='specification', blank=True, null=True)
     remark = models.CharField(verbose_name="备注", max_length=256, null=True)
     record_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间', blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="操作员")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="操作员")
 
     def delete(self, using=None, keep_parents=False):
         if self.material_img:
@@ -65,3 +67,23 @@ class MaterialInfo(models.Model):
     class Meta:
         db_table = 'materialinfo'
         ordering = ['-id']
+
+
+def delete_file(path):
+    if os.path.exists(path):
+        os.remove(path)
+
+
+class MediaImg(models.Model):
+    create_time = models.DateTimeField(auto_now_add=True)
+    file_name = models.CharField("文件名字", max_length=32)
+    file_path = models.FileField(upload_to='img')
+    materialinfo = models.ForeignKey(MaterialInfo, related_name='media_img', on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        db_table = 'media_img'
+
+
+@receiver(post_delete, sender=MediaImg)
+def delete_media_img(sender, **kwargs):
+    delete_file(kwargs['instance'].file_path.path)

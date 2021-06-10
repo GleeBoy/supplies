@@ -71,8 +71,10 @@ export default {
           formData.append('PW', this.ruleForm.pass)
           this.$djangoAPI.post('/api/login/', formData).then(res => {
             if (res.status) {
+              console.log(this.$session)
               this.$router.push({path: '/home/material'})
             } else {
+              console.log(this.$session)
               this.$message.error('账号或密码错误')
             }
           }).catch(err => {

@@ -9,7 +9,7 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 
 const djangoAPI = axios.create({
-  timeout: 10000
+  timeout: 6000 * 1000
 })
 djangoAPI.interceptors.response.use(
   resp => {
@@ -42,6 +42,15 @@ Vue.filter('fileName', function (value) {
     return decodeURIComponent(value.substring(value.lastIndexOf('/') + 1))
   }
 })
+Vue.prototype.getIndex = function getIndex (_arr, _obj) {
+  var len = _arr.length
+  for (var i = 0; i < len; i++) {
+    if (_arr[i] === _obj) {
+      return parseInt(i)
+    }
+  }
+  return -1
+}
 
 /* eslint-disable no-new */
 new Vue({
