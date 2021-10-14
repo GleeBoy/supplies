@@ -13,6 +13,7 @@ urlpatterns = [
     path('manage/', include(router.urls)),
     path('middle_str/', middle_str),
     path('check_firm/', check_firm),
+    path('check_itemcode/', check_itemcode),
     path('test/', test),
     path('get_sub/', get_sub),
     path('check_super_code/', check_super_code),

@@ -22,7 +22,7 @@
                 :value="item.code">
               </el-option>
             </el-select>
-            <el-select style="width: 150px" v-model="materForm.item_name" placeholder="请选择子类" @change="getMiddleStr">
+            <el-select style="width: 150px" v-model="materForm.item_name" placeholder="请选择子类">  <!-- @change="getMiddleStr" -->
               <el-option
                 v-for="item in subClass"
                 :key="item.id"
@@ -30,8 +30,8 @@
                 :value="item">
               </el-option>
             </el-select>
-            <el-input v-model="materForm.middleStr" readonly autocomplete="off"></el-input>
-            <el-input v-model="materForm.lastStr" @change="getItemCode" autocomplete="off"></el-input>
+            <el-input v-model="materForm.middleStr" @change="getItemCode" placeholder="5位编号" maxlength="5" minlength="5" autocomplete="off"></el-input>
+            <el-input v-model="materForm.lastStr" @change="getItemCode" maxlength="2" minlength="2" autocomplete="off"></el-input>
           </div>
 
           <el-input v-model="materForm.item_code" style="width: 500px" readonly autocomplete="off"></el-input>
@@ -259,25 +259,51 @@ export default {
         callback()
       }
     }
-    var checkFirm = (rule, value, callback) => {
-      if (this.materForm.firm_code === '' || this.materForm.firm_name === '') {
+    // var checkFirm = (rule, value, callback) => {
+    //   if (this.materForm.firm_code === '' || this.materForm.firm_name === '') {
+    //     callback(new Error('不可为空'))
+    //   } else {
+    //     if (this.materForm.id) {
+    //       callback()
+    //     } else {
+    //       if (this.materForm.firm_name === '中安百傲') {
+    //         callback()
+    //       } else {
+    //         let params = {
+    //           params: {
+    //             firm_code: this.materForm.firm_code,
+    //             firm_name: this.materForm.firm_name
+    //           }
+    //         }
+    //         this.$djangoAPI.get('/api/check_firm/', params).then(res => {
+    //           if (res.results === 'yes') {
+    //             callback(new Error('厂商型号，厂商已存在'))
+    //           } else {
+    //             callback()
+    //           }
+    //         })
+    //       }
+    //     }
+    //   }
+    // }
+    var checkItemcode = (rule, value, callback) => {
+      if (this.materForm.item_code === '') {
         callback(new Error('不可为空'))
       } else {
         if (this.materForm.id) {
           callback()
         } else {
-          if (this.materForm.firm_name === '中安百傲') {
-            callback()
+          if (this.materForm.middleStr.length !== 5 || this.materForm.lastStr.length !== 2) {
+            callback(new Error('物料编号位数不对'))
           } else {
             let params = {
               params: {
-                firm_code: this.materForm.firm_code,
-                firm_name: this.materForm.firm_name
+                item_code: this.materForm.item_code
               }
             }
-            this.$djangoAPI.get('/api/check_firm/', params).then(res => {
+            this.$djangoAPI.get('/api/check_itemcode/', params).then(res => {
               if (res.results === 'yes') {
-                callback(new Error('厂商型号，厂商已存在'))
+                callback(new Error('物料已存在'))
               } else {
                 callback()
               }
@@ -306,7 +332,7 @@ export default {
         superClass: '',
         subClass: '',
         middleStr: '',
-        lastStr: '01',
+        lastStr: '',
         item_code: '',
         item_name: '',
         describe: '',
@@ -322,14 +348,14 @@ export default {
       disabled: false,
       rules: {
         item_code: [
-          {validator: validatePass, trigger: 'blur'}
+          {validator: checkItemcode, trigger: 'blur'}
         ],
         item_name: [
           {validator: validatePass, trigger: 'blur'}
-        ],
-        firm_code: [
-          {validator: checkFirm, trigger: 'blur'}
         ]
+        // firm_code: [
+        //   {validator: checkFirm, trigger: 'blur'}
+        // ]
       },
       imgList: [],
       fileList: [],
@@ -364,7 +390,7 @@ export default {
         this.subClass = res.results
         this.materForm.subClass = this.subClass[0].code
         this.materForm.item_name = this.subClass[0].name
-        this.getMiddleStr(this.subClass[0])
+        // this.getMiddleStr(this.subClass[0])
       })
     },
     getMiddleStr (val) {

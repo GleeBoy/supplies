@@ -148,6 +148,16 @@ def check_firm(request):
     return JsonResponse({'results': results})
 
 
+def check_itemcode(request):
+    item_code = request.GET.get('item_code')
+    mater = MaterialInfo.objects.filter(item_code=item_code)
+    if mater.exists():
+        results = 'yes'
+    else:
+        results = 'no'
+    return JsonResponse({'results': results})
+
+
 def test(request):
     print(request)
     return JsonResponse({})
