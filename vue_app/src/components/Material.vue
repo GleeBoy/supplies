@@ -22,7 +22,7 @@
                 :value="item.code">
               </el-option>
             </el-select>
-            <el-select style="width: 150px" v-model="materForm.item_name" placeholder="请选择子类">  <!-- @change="getMiddleStr" -->
+            <el-select style="width: 150px" v-model="materForm.item_name" placeholder="请选择子类" @change="getMiddleStr">  <!-- @change="getMiddleStr" -->
               <el-option
                 v-for="item in subClass"
                 :key="item.id"
@@ -390,17 +390,17 @@ export default {
         this.subClass = res.results
         this.materForm.subClass = this.subClass[0].code
         this.materForm.item_name = this.subClass[0].name
-        // this.getMiddleStr(this.subClass[0])
+        this.getMiddleStr(this.subClass[0])
       })
     },
     getMiddleStr (val) {
-      this.materForm.subClass = val.code
       this.materForm.item_name = val.name
-      let params = {params: {superClass: this.materForm.superClass, subClass: this.materForm.subClass}}
-      this.$djangoAPI.get('/api/middle_str/', params).then(res => {
-        this.materForm.middleStr = res.results
-        this.getItemCode()
-      })
+      this.materForm.subClass = val.code
+      // let params = {params: {superClass: this.materForm.superClass, subClass: this.materForm.subClass}}
+      // this.$djangoAPI.get('/api/middle_str/', params).then(res => {
+      //   this.materForm.middleStr = res.results
+      this.getItemCode()
+      // })
     },
     getItemCode () {
       if (this.materForm.lastStr) { // 确保lastStr不为空

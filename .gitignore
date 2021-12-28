@@ -1,6 +1,6 @@
 .idea/
 material/__pycache__
-material/migrations/__pycache__
+material/migrations/
 media/img
 media/specification
 supplies/__pycache__
@@ -8,3 +8,4 @@ __pycache__/
 material/static/
 material/templates/
 supplies.tar
+
